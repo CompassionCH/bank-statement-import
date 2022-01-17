@@ -3,6 +3,7 @@
 # Copyright 2017 Open Net Sàrl
 # License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl.html).
 import re
+import string
 from lxml import etree
 
 from odoo import models
@@ -199,6 +200,17 @@ class CamtParser(models.AbstractModel):
                 './ns:Acct/ns:Id/ns:Othr/ns:Id',
             ], result, 'account_number'
         )
+
+        if result["account_number"]:
+            # find the journal related to this account
+            journals = self.env["account.journal"].search([])
+            trans_table = str.maketrans("", "", string.whitespace)
+            account_number_ = result["account_number"].translate(trans_table)
+            journal = journals.filtered(
+                lambda x: x.bank_acc_number and x.bank_acc_number.translate(trans_table) == account_number_)
+            if journal:
+                self = self.with_context(journal_id=journal.id)
+
         self.add_value_from_node(
             ns, node, './ns:Id', result, 'name')
         self.add_value_from_node(
