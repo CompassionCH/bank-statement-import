@@ -349,7 +349,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
                 "date": datetime(2000, 1, 1),
                 "amount": "0.42",
                 "name": "REF-XYZ",
-                "note": (
+                "payment_ref": (
                     "TRANSFER-123456789: Received money from SENDER with reference"
                     " REF-XYZ"
                 ),
@@ -396,7 +396,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
                 "date": datetime(2000, 1, 1),
                 "amount": "-200.00",
                 "name": "INVOICE 42-01",
-                "note": "TRANSFER-123456789: Sent money to John Doe",
+                "payment_ref": "TRANSFER-123456789: Sent money to John Doe",
                 "partner_name": "John Doe",
                 "account_number": "XX00 0000 0000 0000",
                 "unique_import_id": "DEBIT-TRANSFER-123456789-946684800",
@@ -408,7 +408,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
                 "date": datetime(2000, 1, 1),
                 "amount": "-0.60",
                 "name": "Fee for TRANSFER-123456789",
-                "note": "Transaction fee for TRANSFER-123456789",
+                "payment_ref": "Transaction fee for TRANSFER-123456789",
                 "partner_name": "Wise (former TransferWise)",
                 "unique_import_id": "DEBIT-TRANSFER-123456789-946684800-FEE",
             },
@@ -461,7 +461,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
                 "date": datetime(2000, 1, 1),
                 "amount": "-123.45",
                 "name": ("Card transaction of 1234.56 USD issued by Paypal *XX CITY"),
-                "note": (
+                "payment_ref": (
                     "CARD-123456789: Card transaction of 1234.56 USD issued by "
                     "Paypal *XX CITY"
                 ),
@@ -527,7 +527,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
                 "date": datetime(2000, 1, 1),
                 "amount": "-455.55",
                 "name": ("Card transaction of 1234.56 USD issued by Paypal *XX CITY"),
-                "note": (
+                "payment_ref": (
                     "CARD-123456789: Card transaction of 1234.56 USD issued by"
                     " Paypal *XX CITY"
                 ),
@@ -543,7 +543,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
                 "date": datetime(2000, 1, 1),
                 "amount": "-1.23",
                 "name": "Fee for CARD-123456789",
-                "note": "Transaction fee for CARD-123456789",
+                "payment_ref": "Transaction fee for CARD-123456789",
                 "partner_name": "Wise (former TransferWise)",
                 "unique_import_id": "DEBIT-CARD-123456789-946684800-FEE",
             },
@@ -595,7 +595,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
             {
                 "date": datetime(2000, 1, 1),
                 "name": "Invoice A from DD MMM YYYY",
-                "note": "TRANSFER-123456789: Sent money to Jane Doe",
+                "payment_ref": "TRANSFER-123456789: Sent money to Jane Doe",
                 "partner_name": "Jane Doe",
                 "account_number": "(ADBCDEF) 0000000000000000",
                 "amount": "-265.34",
@@ -609,7 +609,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
             {
                 "date": datetime(2000, 1, 1),
                 "name": "Fee for TRANSFER-123456789",
-                "note": "Transaction fee for TRANSFER-123456789",
+                "payment_ref": "Transaction fee for TRANSFER-123456789",
                 "partner_name": "Wise (former TransferWise)",
                 "amount": "-5.21",
                 "unique_import_id": "DEBIT-TRANSFER-123456789-946684800-FEE",
@@ -647,7 +647,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
             {
                 "date": datetime(2000, 1, 1),
                 "name": "Topped up balance",
-                "note": "TRANSFER-123456789: Topped up balance",
+                "payment_ref": "TRANSFER-123456789: Topped up balance",
                 "amount": "5000.00",
                 "unique_import_id": "CREDIT-TRANSFER-123456789-946684800",
             },
@@ -703,7 +703,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
             {
                 "date": datetime(2000, 1, 1),
                 "name": "Converted 7.93 USD to 6.93 EUR",
-                "note": "BALANCE-123456789: Converted 7.93 USD to 6.93 EUR",
+                "payment_ref": "BALANCE-123456789: Converted 7.93 USD to 6.93 EUR",
                 "amount": "6.93",
                 "amount_currency": "7.93",
                 "currency_id": self.currency_usd.id,
@@ -761,7 +761,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
             {
                 "date": datetime(2000, 1, 1),
                 "name": "Converted 7.93 USD to 6.93 EUR",
-                "note": "BALANCE-123456789: Converted 7.93 USD to 6.93 EUR",
+                "payment_ref": "BALANCE-123456789: Converted 7.93 USD to 6.93 EUR",
                 "amount": "-7.88",
                 "amount_currency": "-6.93",
                 "currency_id": self.currency_eur.id,
@@ -773,7 +773,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
             {
                 "date": datetime(2000, 1, 1),
                 "name": "Fee for BALANCE-123456789",
-                "note": "Transaction fee for BALANCE-123456789",
+                "payment_ref": "Transaction fee for BALANCE-123456789",
                 "amount": "-0.05",
                 "partner_name": "Wise (former TransferWise)",
                 "unique_import_id": "DEBIT-BALANCE-123456789-946684800-FEE",
@@ -811,7 +811,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
             {
                 "date": datetime(2000, 1, 1),
                 "name": "Topped up balance",
-                "note": "TRANSFER-123456789: Topped up balance",
+                "payment_ref": "TRANSFER-123456789: Topped up balance",
                 "amount": "25.68",
                 "unique_import_id": "CREDIT-TRANSFER-123456789-946684800",
             },
@@ -821,7 +821,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
             {
                 "date": datetime(2000, 1, 1),
                 "name": "Fee for TRANSFER-123456789",
-                "note": "Transaction fee for TRANSFER-123456789",
+                "payment_ref": "Transaction fee for TRANSFER-123456789",
                 "amount": "-0.68",
                 "partner_name": "Wise (former TransferWise)",
                 "unique_import_id": "CREDIT-TRANSFER-123456789-946684800-FEE",
@@ -862,7 +862,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
             {
                 "date": datetime(2000, 1, 1),
                 "name": "Sent money to Acme Inc.",
-                "note": "TRANSFER-123456789: Sent money to Acme Inc.",
+                "payment_ref": "TRANSFER-123456789: Sent money to Acme Inc.",
                 "partner_name": "Acme Inc.",
                 "amount": "1800.00",
                 "unique_import_id": "CREDIT-TRANSFER-123456789-946684800",
@@ -873,7 +873,7 @@ edF6byMgXSzgOWYuRPXwmHpBQV0GiexQUAxVyUzaVWfil69LaFfXaw==
             {
                 "date": datetime(2000, 1, 1),
                 "name": "Fee for TRANSFER-123456789",
-                "note": "Transaction fee for TRANSFER-123456789",
+                "payment_ref": "Transaction fee for TRANSFER-123456789",
                 "amount": "4.33",
                 "partner_name": "Wise (former TransferWise)",
                 "unique_import_id": "CREDIT-TRANSFER-123456789-946684800-FEE",
