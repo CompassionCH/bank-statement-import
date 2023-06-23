@@ -25,5 +25,5 @@ class EdiBankStatementImportProcess(Component):
         statement = self.env["account.bank.statement"].browse(action.get("res_id"))
         if not (statement.state and statement.state in ["posted", "open"]):
             raise ValueError(
-                f"The statement {statement} opened\nHis state : {statement.state}"
+                _("The bank statement could not be validated.")
             )
