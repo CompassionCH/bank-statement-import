@@ -21,7 +21,7 @@ class EdiBankStatementImportProcess(Component):
         )
         action = statement_import.import_file_button()
         if not action:
-            raise ValueError(f"The import hasn't been achieved. {statement_import}")
+            raise ValueError(_("The import didn't succeed."))
         statement = self.env["account.bank.statement"].browse(action.get("res_id"))
         if not (statement.state and statement.state in ["posted", "open"]):
             raise ValueError(
