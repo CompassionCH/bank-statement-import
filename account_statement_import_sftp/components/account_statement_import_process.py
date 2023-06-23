@@ -1,6 +1,8 @@
 # Copyright 2023 Compassion CH
 # @author: Simon Gonzalez
 # License AGPL-3.0 or later (http://www.gnu.org/licenses/agpl).
+from odoo import _
+
 from odoo.addons.component.core import Component
 
 
@@ -24,6 +26,4 @@ class EdiBankStatementImportProcess(Component):
             raise ValueError(_("The import didn't succeed."))
         statement = self.env["account.bank.statement"].browse(action.get("res_id"))
         if not (statement.state and statement.state in ["posted", "open"]):
-            raise ValueError(
-                _("The bank statement could not be validated.")
-            )
+            raise ValueError(_("The bank statement could not be validated."))
