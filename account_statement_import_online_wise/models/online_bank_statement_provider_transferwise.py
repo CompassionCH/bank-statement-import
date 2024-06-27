@@ -201,7 +201,7 @@ class OnlineBankStatementProviderTransferwise(models.Model):
             int(date.timestamp()),
         )
         line = {
-            "name": payment_reference or description or "",
+            "narration": payment_reference or description or "",
             "amount": str(amount_value),
             "date": date,
             "payment_ref": pay_ref,
@@ -244,14 +244,14 @@ class OnlineBankStatementProviderTransferwise(models.Model):
                 line.update(
                     {
                         "amount_currency": str(other_amount_value),
-                        "currency_id": other_currency.id,
+                        "foreign_currency_id": other_currency.id,
                     }
                 )
         lines = [line]
         if fees_value:
             lines += [
                 {
-                    "name": _("Fee for %s") % reference_number,
+                    "narration": _("Fee for %s") % reference_number,
                     "amount": str(fees_value),
                     "date": date,
                     "partner_name": "Wise (former TransferWise)",
