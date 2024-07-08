@@ -33,6 +33,7 @@ class CamtParser(models.AbstractModel):
             amount = sign * float(amount_node[0].text)
         return amount
 
+
     def add_value_from_node(self, ns, node, xpath_str, obj, attr_name, join_str=None):
         """Add value to object from first or all nodes found with xpath.
 
@@ -190,7 +191,18 @@ class CamtParser(models.AbstractModel):
         )
         amount = self.parse_amount(ns, node)
         if amount != 0.0:
-            transaction["amount"] = amount
+            if transaction["amount"] != 0 and transaction["amount"] != amount:
+                # Probably currencies in this transaction
+                ntry_dtls_currency = node.xpath("ns:Amt/@Ccy", namespaces={"ns": ns})[0]
+                ntry_currency = node.xpath("../../ns:Amt/@Ccy", namespaces={"ns": ns})[0]
+                if ntry_currency and ntry_dtls_currency and  ntry_currency != ntry_dtls_currency:
+                    other_currency = self.env["res.currency"].search(
+                        [("name", "=", ntry_dtls_currency)], limit=1
+                    )
+                    transaction["amount_currency"] = amount
+                    transaction["foreign_currency_id"] = other_currency.id
+            else:
+                transaction["amount"] = amount
         # remote party values
         party_type = "Dbtr"
         party_type_node = node.xpath("../../ns:CdtDbtInd", namespaces={"ns": ns})
@@ -282,6 +294,10 @@ class CamtParser(models.AbstractModel):
         amount = self.parse_amount(ns, node)
         if amount != 0.0:
             transaction["amount"] = amount
+        # if amount_currency and currency:
+        #     transaction["currency"] = currency
+        #     transaction["amount_currency"] = amount_currency
+
         self.add_value_from_node(
             ns,
             node,
