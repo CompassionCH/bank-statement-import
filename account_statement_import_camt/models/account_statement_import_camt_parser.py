@@ -88,6 +88,14 @@ class AccountStatementImportCamtParser(models.AbstractModel):
         self.add_value_from_node(
             ns,
             node,
+            "./ns:RmtInf/ns:Strd/ns:AddtlRmtInf",
+            transaction["narration"],
+            "%s (RmtInf/Strd/AddtlRmtInf)" % _("Additional Remittance Information"),
+            join_str=" ",
+        )
+        self.add_value_from_node(
+            ns,
+            node,
             ["./ns:AddtlTxInf"],
             transaction["narration"],
             "%s (AddtlTxInf)" % _("Additional Transaction Information"),
