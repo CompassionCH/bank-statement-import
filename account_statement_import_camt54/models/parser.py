@@ -99,3 +99,12 @@ class CamtParser(models.AbstractModel):
             "ref",
         )
         return True
+
+    def parse_amount_details_currency(self, ns, node, transaction):
+        re_camt_version = re.compile(
+            r"(^urn:iso:std:iso:20022:tech:xsd:camt.054." r"|^ISO:camt.054.)"
+        )
+        if re_camt_version.search(ns):
+            # camt54 use amounts only from txdtls
+            transaction["amount"] = self.parse_amount(ns, node)
+        return super().parse_amount_details_currency(ns, node, transaction)
