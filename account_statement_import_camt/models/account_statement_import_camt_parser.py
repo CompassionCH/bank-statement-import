@@ -378,6 +378,10 @@ class AccountStatementImportCamtParser(models.AbstractModel):
         )
 
         details_nodes = node.xpath("./ns:NtryDtls/ns:TxDtls", namespaces={"ns": ns})
+        if node.xpath(
+            "./ns:Chrgs/ns:Rcrd/ns:ChrgInclInd[text()='true']", namespaces={"ns": ns}
+        ):
+            details_nodes += node.xpath("./ns:Chrgs/ns:Rcrd", namespaces={"ns": ns})
         if len(details_nodes) == 0:
             transaction.pop("currency")
             self.generate_narration(transaction)
