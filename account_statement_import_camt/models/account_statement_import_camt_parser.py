@@ -193,6 +193,9 @@ class AccountStatementImportCamtParser(models.AbstractModel):
             transaction["amount"] = amount
         # remote party values
         party_type = "Dbtr"
+        ultmtdbtr = node.xpath("./ns:RltdPties/ns:UltmtDbtr", namespaces={"ns": ns})
+        if ultmtdbtr:
+            party_type = "UltmtDbtr"
         party_type_node = node.xpath("../../ns:CdtDbtInd", namespaces={"ns": ns})
         if party_type_node and party_type_node[0].text != "CRDT":
             party_type = "Cdtr"
