@@ -330,6 +330,7 @@ class AccountStatementImportCamtParser(models.AbstractModel):
                 "./ns:NtryDtls/ns:RmtInf/ns:Strd/ns:CdtrRefInf/ns:Ref",
                 "./ns:NtryDtls/ns:Btch/ns:PmtInfId",
                 "./ns:NtryDtls/ns:TxDtls/ns:Refs/ns:AcctSvcrRef",
+                "./ns:AcctSvcrRef",
             ],
             transaction,
             "ref",
