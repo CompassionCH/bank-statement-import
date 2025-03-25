@@ -123,7 +123,9 @@ class CamtParser(models.AbstractModel):
         re_camt_version = re.compile(
             r"(^urn:iso:std:iso:20022:tech:xsd:camt.054." r"|^ISO:camt.054.)"
         )
-        if re_camt_version.search(ns):
+        ICP = self.env["ir.config_parameter"]
+        qrr_in_journal = ICP.sudo().get_param("ntryref_as_journal")
+        if re_camt_version.search(ns) and qrr_in_journal:
             self.add_value_from_node(
                 ns,
                 node,

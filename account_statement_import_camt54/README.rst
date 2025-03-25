@@ -59,6 +59,10 @@ reference inside the QRR. The format is i[,n] For instance 13,6 to start
 on position 13 with a 6 digit long reference. n is optional and it's
 default value is 6.
 
+To import a camt054 QRR file in a separate journal linked to the QRR
+bank account, create the config parameter key ntryref_as_journal (it can
+hold any value that evaluates to true).
+
 **Table of contents**
 
 .. contents::
@@ -85,22 +89,22 @@ Authors
 Contributors
 ------------
 
-- Yannick Vaucher <yannick.vaucher@camptocamp.com>
+-  Yannick Vaucher <yannick.vaucher@camptocamp.com>
 
-- Timon Tschanz <timon.tschanz@camptocamp.com>
+-  Timon Tschanz <timon.tschanz@camptocamp.com>
 
-- `Trobz <https://trobz.com>`__:
+-  `Trobz <https://trobz.com>`__:
 
-     - Son Ho <sonhd@trobz.com>
+      -  Son Ho <sonhd@trobz.com>
 
 Other credits
 -------------
 
-- Digital4efficiency.ch
-- The migration of this module from 15.0 to 16.0 was financially
-  supported by Camptocamp
-- The migration of this module from 16.0 to 17.0 was financially
-  supported by Camptocamp
+-  Digital4efficiency.ch
+-  The migration of this module from 15.0 to 16.0 was financially
+   supported by Camptocamp
+-  The migration of this module from 16.0 to 17.0 was financially
+   supported by Camptocamp
 
 Maintainers
 -----------
