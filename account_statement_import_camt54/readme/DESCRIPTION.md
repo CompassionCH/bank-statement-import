@@ -27,3 +27,7 @@ Value to set in qrr_partner_ref defines the position of the partner
 reference inside the QRR. The format is i\[,n\] For instance 13,6 to
 start on position 13 with a 6 digit long reference. n is optional and
 it's default value is 6.
+
+To import a camt054 QRR file in a separate journal linked to the QRR bank account,
+create the config parameter key ntryref_as_journal
+(it can hold any value that evaluates to true).
