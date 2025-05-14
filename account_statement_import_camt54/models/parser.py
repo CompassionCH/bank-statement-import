@@ -72,7 +72,7 @@ class CamtParser(models.AbstractModel):
             )[0].text
         else:
             xpath_exprs = [
-                "./ns:RmtInf/ns:Ustrd|./ns:RtrInf/ns:AddtlInf",
+                "./ns:RmtInf/ns:Ustrd|./ns:RtrInf/ns:AddtlInf|./ns:RmtInf/ns:Strd/ns:RfrdDocInf/ns:Nb",
                 "./ns:AddtlNtryInf",
                 "/ns:Refs/ns:InstrId",
             ]
