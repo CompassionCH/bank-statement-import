@@ -390,6 +390,7 @@ class AccountStatementImportCamtParser(models.AbstractModel):
         transaction_base = transaction
         for node in details_nodes:
             transaction = transaction_base.copy()
+            transaction["narration"] = transaction_base["narration"].copy()
             self.parse_transaction_details(ns, node, transaction)
             transaction.pop("currency")
             self.generate_narration(transaction)
