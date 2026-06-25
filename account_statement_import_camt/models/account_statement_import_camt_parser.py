@@ -292,10 +292,14 @@ class AccountStatementImportCamtParser(models.AbstractModel):
                     "partner_name",
                 )
             # --- Structured address detection SIX ---
-            has_adrline = bool(node.xpath("./ns:RltdPties//ns:PstlAdr/ns:AdrLine",
-                                          namespaces={"ns": ns}))
-            transaction["narration"][
-                "Address_Type"] = "Unstructured (Legacy)" if has_adrline else "Structured"
+            has_adrline = bool(
+                node.xpath(
+                    "./ns:RltdPties//ns:PstlAdr/ns:AdrLine", namespaces={"ns": ns}
+                )
+            )
+            transaction["narration"]["Address_Type"] = (
+                "Unstructured (Legacy)" if has_adrline else "Structured"
+            )
 
             self.add_value_from_node(
                 ns,
@@ -433,16 +437,9 @@ class AccountStatementImportCamtParser(models.AbstractModel):
 
         tx_details_nodes = node.xpath("./ns:NtryDtls/ns:TxDtls", namespaces={"ns": ns})
         details_nodes = list(tx_details_nodes)
-        details_nodes.extend(
-            node.xpath(
-                "./ns:Chrgs/ns:Rcrd[ns:ChrgInclInd='true']", namespaces={"ns": ns}
-            )
+        charge_nodes = node.xpath(
+            "./ns:Chrgs/ns:Rcrd[ns:ChrgInclInd='true']", namespaces={"ns": ns}
         )
-        # --- fees extraction ---
-        tx_details_nodes = node.xpath("./ns:NtryDtls/ns:TxDtls", namespaces={"ns": ns})
-        charge_nodes = node.xpath("./ns:Chrgs/ns:Rcrd[ns:ChrgInclInd='true']",
-                                  namespaces={"ns": ns})
-        details_nodes = list(tx_details_nodes)
         details_nodes.extend(charge_nodes)
         total_charges = sum(self.parse_amount(ns, chg) for chg in charge_nodes)
 
