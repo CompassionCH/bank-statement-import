@@ -155,8 +155,9 @@ class CamtParser(models.AbstractModel):
             if transaction["amount"] == 0.0 and len(details_nodes) == 1:
                 transaction["amount"] = entry_amount
             self.parse_transaction_details(ns, det_node, transaction)
-            if not self.parse_amount_details_currency(ns, det_node, transaction):
-                self.parse_amount_details_currency(ns, node, transaction)
+            if not det_node.tag.endswith("Rcrd"):
+                if not self.parse_amount_details_currency(ns, det_node, transaction):
+                    self.parse_amount_details_currency(ns, node, transaction)
             transaction.pop("currency", None)
             self.generate_narration(transaction)
             yield transaction
