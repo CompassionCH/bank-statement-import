@@ -467,10 +467,11 @@ class AccountStatementImportCamtParser(models.AbstractModel):
             elif det_node.tag.endswith("Rcrd"):
                 transaction["payment_ref"] = "Bank Fees"
             self.parse_transaction_details(ns, det_node, transaction)
-            if not self.parse_amount_details_currency(ns, det_node, transaction):
-                self.parse_amount_details_currency(
-                    ns, det_node.getparent().getparent(), transaction
-                )
+            if not det_node.tag.endswith("Rcrd"):
+                if not self.parse_amount_details_currency(ns, det_node, transaction):
+                    self.parse_amount_details_currency(
+                        ns, det_node.getparent().getparent(), transaction
+                    )
             transaction.pop("currency", None)
             self.generate_narration(transaction)
             yield transaction
