@@ -147,6 +147,25 @@ class TestParser(TestParserCommon):
     def test_parse_no_ntry(self):
         self._do_parse_test("test-camt053-no-ntry", "golden-camt053-no-ntry.pydata")
 
+    def test_parse_addtl_rmt_inf(self):
+        """All RmtInf/Strd/AddtlRmtInf nodes of a transaction go on one note
+        line, joined by a space; a transaction without any gets no such line."""
+        with open(
+            file_path(
+                "account_statement_import_camt/tests/samples/test-camt053-addtlrmtinf"
+            ),
+            "rb",
+        ) as camt_file:
+            _currency, _account, statements = self.parser.parse(camt_file.read())
+        notes = {
+            transaction["amount"]: transaction["narration"]
+            for transaction in statements[0]["transactions"]
+        }
+        label = "Additional Remittance Information (RmtInf/Strd/AddtlRmtInf)"
+        self.assertIn(f"{label}: Cadeau de Noël pour Maria", notes[10.0].split("\n"))
+        self.assertIn(f"{label}: Birthday gift for Maria", notes[20.0].split("\n"))
+        self.assertNotIn("AddtlRmtInf", notes[30.0])
+
     def test_parse_multicurrency_amount_details(self):
         self.env.ref("base.EUR").write({"active": True})
         self.env.ref("base.SEK").write({"active": True})
