@@ -139,3 +139,53 @@ class TestGenerateBankStatement(TransactionCase):
             f"got {statement.journal_id.display_name!r}",
         )
         self.assertAlmostEqual(sum(statement.line_ids.mapped("amount")), 184.0)
+
+    def test_statement_import_camt054_qrr_fields(self):
+        """The QRR goes in the reference, the additional remittance
+        information in the label and the note; without additional
+        remittance information, the label falls back to the QRR."""
+        self.env.ref("base.CHF").write({"active": True})
+        qrr_account_bank = self.env["res.partner.bank"].create(
+            {
+                "acc_number": "CH0000000000000000002",
+                "partner_id": self.env.ref("base.main_partner").id,
+                "company_id": self.env.ref("base.main_company").id,
+                "bank_id": self.env.ref("base.res_bank_1").id,
+            }
+        )
+        self.env["account.journal"].create(
+            {
+                "name": "Test QRR journal (camt054)",
+                "code": "TQR54",
+                "type": "bank",
+                "bank_account_id": qrr_account_bank.id,
+                "currency_id": self.env.ref("base.CHF").id,
+            }
+        )
+        testfile = file_path(
+            "account_statement_import_camt54/tests/samples/test-camt054-qrr.xml"
+        )
+        with open(testfile, "rb") as datafile:
+            action = (
+                self.env["account.statement.import"]
+                .create(
+                    {
+                        "statement_filename": "test-camt054-qrr.xml",
+                        "statement_file": base64.b64encode(datafile.read()),
+                    }
+                )
+                .import_file_button()
+            )
+        lines = (
+            self.env["account.bank.statement"].browse(action["domain"][0][2]).line_ids
+        )
+        line_1 = lines.filtered(lambda line: line.ref == "000000000000000000000000001")
+        line_2 = lines.filtered(lambda line: line.ref == "000000000000000000000000002")
+        self.assertEqual(line_1.payment_ref, "000000000000000000000000001")
+        self.assertNotIn("AddtlRmtInf", line_1.narration)
+        self.assertEqual(line_2.payment_ref, "Test remittance info")
+        self.assertIn(
+            "Additional Remittance Information (RmtInf/Strd/AddtlRmtInf): "
+            "Test remittance info",
+            line_2.narration,
+        )

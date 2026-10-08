@@ -17,7 +17,9 @@
                                   '123456CHCAFEBABE\n'
                                   'Reversal Indicator (RvslInd): false\n'
                                   'Structured Reference (RmtInf/Strd/CdtrRefInf/Ref): 302388292000011111111111111\n'
-                                  'Account Servicer Reference (Refs/AcctSvcrRef): 123456CHCAFEBABE',
+                                  'Additional Remittance Information (RmtInf/Strd/AddtlRmtInf): ?REJECT?0\n'
+                                  'Account Servicer Reference (Refs/AcctSvcrRef): 123456CHCAFEBABE\n'
+                                  'Address_Type: Structured',
                      'partner_name': 'Ultimate Payer Ltd',
                      'payment_ref': '/',
                      'ref': '302388292000011111111111111',
@@ -35,7 +37,9 @@
                                   '123456CHCAFEBABE\n'
                                   'Reversal Indicator (RvslInd): false\n'
                                   'Structured Reference (RmtInf/Strd/CdtrRefInf/Ref): 302388292000022222222222222\n'
+                                  'Additional Remittance Information (RmtInf/Strd/AddtlRmtInf): ?REJECT?0\n'
                                   'Account Servicer Reference (Refs/AcctSvcrRef): 123456CHCAFEBABE\n'
+                                  'Address_Type: Structured\n'
                                   'Postal Address (PstlAdr): Place Saint-François | 14 | 1003 | Lausanne | CH2',
                      'partner_name': 'Banque Cantonale Vaudoise',
                      'payment_ref': '/',
@@ -52,6 +56,7 @@
                                   'Transaction Type (BkTxCd): \n'
                                   'Additional Entry Information (AddtlNtryInf): ENTRY INFO SHOULD STAY IN NARRATION ONLY\n'
                                   'Unstructured Reference (RmtInf/Ustrd): REM-ONE\n'
+                                  'Address_Type: Unstructured (Legacy)\n'
                                   'Postal Address (PstlAdr): Address line 1',
                      'partner_name': 'Single Detail Debtor',
                      'payment_ref': 'REM-ONE',

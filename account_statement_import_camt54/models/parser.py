@@ -50,18 +50,24 @@ class CamtParser(models.AbstractModel):
         return isr[start:end].lstrip("0")
 
     def parse_transaction_details(self, ns, node, transaction):
-        """Put ESR in label and add aditional information to label
-        if no esr is available
+        """Put the additional remittance information in the label (the QRR
+        when there is none) and the QRR in the reference. Without QRR, use
+        the other available information for the label.
         """
         super().parse_transaction_details(ns, node, transaction)
-        # put the esr in the label. odoo reconciles based on the label,
-        # if there is no esr it tries to use the information textfield
 
         qrr_number = node.xpath(
             "./ns:RmtInf/ns:Strd/ns:CdtrRefInf/ns:Ref", namespaces={"ns": ns}
         )
         if len(qrr_number):
-            transaction["payment_ref"] = qrr_number[0].text
+            addtl_rmt_inf = [
+                info.text
+                for info in node.xpath(
+                    "./ns:RmtInf/ns:Strd/ns:AddtlRmtInf", namespaces={"ns": ns}
+                )
+                if info.text
+            ]
+            transaction["payment_ref"] = " ".join(addtl_rmt_inf) or qrr_number[0].text
             partner_ref = self._get_partner_ref(qrr_number[0].text)
             if partner_ref:
                 transaction["partner_ref"] = partner_ref
@@ -86,15 +92,14 @@ class CamtParser(models.AbstractModel):
                 payment_ref = f"{payment_ref} ({trans_id_node[0].text})"
             if payment_ref:
                 transaction["payment_ref"] = payment_ref
-        # End add esr to the label.
 
-        # add transaction id to ref
+        # QRR in ref, transaction id otherwise
         self.add_value_from_node(
             ns,
             node,
             [
-                "./../../ns:AcctSvcrRef",
                 "./ns:RmtInf/ns:Strd/ns:CdtrRefInf/ns:Ref",
+                "./../../ns:AcctSvcrRef",
                 "./ns:Refs/ns:EndToEndId",
             ],
             transaction,
