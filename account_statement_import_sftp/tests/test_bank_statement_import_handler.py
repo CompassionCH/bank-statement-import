@@ -152,7 +152,11 @@ class TestBankStatementImportHandler(AccountTestInvoicingCommon):
             camt_component = self._create_type("test_camt_comp", r"^camt\.054-X.*")
             camt_component.process_model_id = component_handler
 
-        set_statement_process_handler(self.env)
+        with self.assertLogs(
+            "odoo.addons.account_statement_import_sftp.hooks", level="WARNING"
+        ) as logs:
+            set_statement_process_handler(self.env)
+        self.assertIn("keep their process handler or settings", logs.output[0])
 
         self.assertEqual(camt_empty.process_model_id, self.handler)
         self.assertEqual(pain002.process_model_id, self.unsupported_handler)
