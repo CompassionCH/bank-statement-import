@@ -1,0 +1,156 @@
+# Copyright 2026 Compassion CH (<https://www.compassion.ch>)
+# License AGPL-3.0 or later (https://www.gnu.org/licenses/agpl).
+
+import base64
+from datetime import date
+
+from odoo.tests import tagged
+from odoo.tools import mute_logger
+from odoo.tools.misc import file_open
+
+from odoo.addons.account.tests.common import AccountTestInvoicingCommon
+
+from ..hooks import pre_init_hook, set_statement_process_handler
+
+
+@tagged("post_install", "-at_install")
+class TestBankStatementImportHandler(AccountTestInvoicingCommon):
+    """Process EDI exchange records with the handler. No server is used."""
+
+    @classmethod
+    def setUpClass(cls):
+        # The chart of accounts gives the suspense account of the journal.
+        super().setUpClass()
+        # Like the EDI crons and jobs, which run as superuser.
+        cls.env = cls.env(su=True)
+        eur = cls.env.ref("base.EUR")
+        eur.active = True
+        bank_account = cls.env["res.partner.bank"].create(
+            {
+                "acc_number": "NL12ABCD3456789012",
+                "partner_id": cls.env.company.partner_id.id,
+            }
+        )
+        cls.journal = cls.env["account.journal"].create(
+            {
+                "name": "Bank Journal - (test sftp)",
+                "code": "TBNKSFTP",
+                "type": "bank",
+                "bank_account_id": bank_account.id,
+                "currency_id": eur.id,
+            }
+        )
+        cls.backend_type = cls.env.ref("account_statement_import_sftp.sftp_bank_edi")
+        cls.backend = cls.env["edi.backend"].create(
+            {"name": "Test bank SFTP", "backend_type_id": cls.backend_type.id}
+        )
+        cls.handler = cls.env["ir.model"]._get("edi.bank.statement.import.handler")
+        cls.exchange_type = cls._create_type("test_camt053_in", r"^camt\.053.*\.xml")
+        cls.exchange_type.process_model_id = cls.handler
+        with file_open(
+            "account_statement_import_sftp/tests/samples/camt053.xml", "rb"
+        ) as f:
+            cls.camt_file = base64.b64encode(f.read())
+
+    @classmethod
+    def _create_type(cls, code, pattern):
+        return cls.env["edi.exchange.type"].create(
+            {
+                "name": code,
+                "code": code,
+                "backend_type_id": cls.backend_type.id,
+                "direction": "input",
+                "exchange_filename_pattern": pattern,
+            }
+        )
+
+    def _process(self, file_content, filename="camt.053-test.xml"):
+        record = self.backend.create_record(
+            self.exchange_type.code,
+            {
+                "exchange_file": file_content,
+                "exchange_filename": filename,
+                "edi_exchange_state": "input_received",
+            },
+        )
+        self.backend.exchange_process(record)
+        return record
+
+    def test_process_imports_statement(self):
+        record = self._process(self.camt_file)
+
+        self.assertEqual(record.edi_exchange_state, "input_processed")
+        statement = self.env["account.bank.statement"].search(
+            [("name", "=", "5678ABC/1")]
+        )
+        self.assertEqual(len(statement), 1)
+        self.assertEqual(statement.journal_id, self.journal)
+        self.assertEqual(statement.balance_start, 75000.0)
+        self.assertEqual(statement.balance_end, 73800.0)
+        self.assertEqual(statement.date, date(2024, 3, 2))
+        self.assertEqual(statement.line_ids.amount, -1200.0)
+        # In 18 the lines are posted at once: no more "auto post" option.
+        self.assertEqual(statement.line_ids.move_id.state, "posted")
+
+    def test_process_file_without_transaction(self):
+        """A day without transaction gives no statement: an error, like v14."""
+        content = base64.b64decode(self.camt_file).decode()
+        start, end = content.index("<Ntry>"), content.index("</Ntry>") + len("</Ntry>")
+        empty_file = base64.b64encode((content[:start] + content[end:]).encode())
+        record = self._process(empty_file)
+        self.assertEqual(record.edi_exchange_state, "input_processed_error")
+        self.assertIn("already imported", record.exchange_error)
+
+    @mute_logger(
+        "odoo.addons.account_statement_import_camt.models.account_statement_import"
+    )
+    def test_process_unknown_format(self):
+        record = self._process(base64.b64encode(b"<Document>not camt</Document>"))
+        self.assertEqual(record.edi_exchange_state, "input_processed_error")
+        self.assertTrue(record.exchange_error)
+        self.assertFalse(
+            self.env["account.bank.statement"].search(
+                [("journal_id", "=", self.journal.id)]
+            )
+        )
+
+    def test_set_handler_on_camt_types_only(self):
+        component_handler = self.env.ref(
+            "edi_component_oca.model_edi_oca_component_handler",
+            raise_if_not_found=False,
+        )
+        camt_empty = self._create_type("test_camt054_in", r"^camt\.054_P.*\.xml")
+        pain002 = self._create_type("test_pain002_in", r"^pain\.002-EPO_.*\.xml")
+        # Any other model works here: the hook must keep it as it is.
+        other_handler = self.env["ir.model"]._get("edi.exchange.type")
+        camt_other = self._create_type("test_camt_other", r"^camt\.053-other.*")
+        camt_other.process_model_id = other_handler
+        if component_handler:
+            pain002.process_model_id = component_handler
+            camt_component = self._create_type("test_camt_comp", r"^camt\.054-X.*")
+            camt_component.process_model_id = component_handler
+
+        set_statement_process_handler(self.env)
+
+        self.assertEqual(camt_empty.process_model_id, self.handler)
+        self.assertEqual(
+            pain002.process_model_id, component_handler or self.env["ir.model"]
+        )
+        self.assertEqual(camt_other.process_model_id, other_handler)
+        if component_handler:
+            self.assertEqual(camt_component.process_model_id, self.handler)
+
+    def test_pre_init_hook_gives_xmlid_back(self):
+        """Like a database where the module was uninstalled: the xmlid is gone."""
+        self.env["ir.model.data"].search(
+            [
+                ("module", "=", "account_statement_import_sftp"),
+                ("name", "=", "sftp_bank_edi"),
+            ]
+        ).unlink()
+        self.env.registry.clear_cache()
+        pre_init_hook(self.env)
+        self.assertEqual(
+            self.env.ref("account_statement_import_sftp.sftp_bank_edi"),
+            self.backend_type,
+        )
