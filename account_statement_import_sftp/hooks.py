@@ -13,11 +13,11 @@ BACKEND_TYPE_CODE = "bk_sftp_imp"
 
 
 def pre_init_hook(env):
-    """Keep the backend type of a database where the module was uninstalled.
+    """Give its xmlid back to a backend type that has lost it.
 
-    The EDI backends still use the backend type, so it was not deleted. If
-    its xmlid is gone, give it back: else the data file creates a second
-    backend type with the same code, which is not allowed.
+    The backend type can exist without its xmlid, for example after an
+    uninstall, because the EDI backends still use it. The data file must find
+    it by xmlid: a second backend type with the same code is not allowed.
     """
     if not table_exists(env.cr, "edi_backend_type"):
         return
@@ -50,14 +50,13 @@ def post_init_hook(env):
 def set_statement_process_handler(env):
     """Give a process handler to the input exchange types of the backend type.
 
-    In v14 one component processed all input files of the backend type. In
-    18 the exchange type gives the process handler. edi_oca puts its
-    component handler where it is empty, but no component is left to call,
-    and its error is not caught: the job would fail again every hour.
+    The exchange type gives the handler that processes its files. A type
+    without handler, or with the component handler of edi_component_oca (no
+    component processes these files), gets one of ours:
 
     - camt files (the filename pattern has "camt"): import bank statements.
-    - Other files, like pain.002: they were never bank statements. Like in
-      v14, they end once in error, with a clear message.
+    - Other files, like pain.002: they are not bank statements. The record
+      ends in error, with a clear message.
 
     Another handler, or process settings on the type, can be on purpose: we
     keep them and only report them.

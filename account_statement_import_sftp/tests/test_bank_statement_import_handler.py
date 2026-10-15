@@ -93,12 +93,12 @@ class TestBankStatementImportHandler(AccountTestInvoicingCommon):
         self.assertEqual(statement.balance_end, 73800.0)
         self.assertEqual(statement.date, date(2024, 3, 2))
         self.assertEqual(statement.line_ids.amount, -1200.0)
-        # In 18 the lines are posted at once: no more "auto post" option.
+        # The statement lines are posted when they are created.
         self.assertEqual(statement.line_ids.move_id.state, "posted")
         self.assertEqual(statement.attachment_ids.name, "camt.053-test.xml")
 
     def test_process_file_without_transaction(self):
-        """A day without transaction gives no statement: an error, like v14."""
+        """A file without transaction gives no statement: an error."""
         content = base64.b64decode(self.camt_file).decode()
         start, end = content.index("<Ntry>"), content.index("</Ntry>") + len("</Ntry>")
         empty_file = base64.b64encode((content[:start] + content[end:]).encode())
@@ -120,7 +120,7 @@ class TestBankStatementImportHandler(AccountTestInvoicingCommon):
         )
 
     def test_process_unsupported_file_fails_once(self):
-        """A pain.002 file ends in error once, like v14, and the job does not fail."""
+        """A pain.002 file ends in error, and the job does not fail."""
         pain002 = self._create_type("test_pain002_in", r"^pain\.002-EPO_.*\.xml")
         pain002.process_model_id = self.unsupported_handler
         record = self._process(

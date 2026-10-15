@@ -6,10 +6,10 @@ from odoo.exceptions import UserError
 
 
 class EdiBankFileUnsupportedHandler(models.AbstractModel):
-    """End the exchange record in error, once, for a file nobody imports.
+    """End the exchange record in error, for a file that is not imported.
 
-    Without it, the error of the component handler is not caught and the job
-    fails again every hour.
+    It raises a UserError: the EDI framework catches it, so the record gets
+    the error and its job ends.
     """
 
     _name = "edi.bank.file.unsupported.handler"
