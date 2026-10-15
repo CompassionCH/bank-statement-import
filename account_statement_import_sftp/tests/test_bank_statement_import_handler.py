@@ -4,8 +4,9 @@
 import base64
 from datetime import date
 
+from odoo.modules.migration import load_script
 from odoo.tests import tagged
-from odoo.tools import mute_logger
+from odoo.tools import convert_file, mute_logger
 from odoo.tools.misc import file_open
 
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
@@ -45,6 +46,9 @@ class TestBankStatementImportHandler(AccountTestInvoicingCommon):
             {"name": "Test bank SFTP", "backend_type_id": cls.backend_type.id}
         )
         cls.handler = cls.env["ir.model"]._get("edi.bank.statement.import.handler")
+        cls.unsupported_handler = cls.env["ir.model"]._get(
+            "edi.bank.file.unsupported.handler"
+        )
         cls.exchange_type = cls._create_type("test_camt053_in", r"^camt\.053.*\.xml")
         cls.exchange_type.process_model_id = cls.handler
         with file_open(
@@ -64,9 +68,9 @@ class TestBankStatementImportHandler(AccountTestInvoicingCommon):
             }
         )
 
-    def _process(self, file_content, filename="camt.053-test.xml"):
+    def _process(self, file_content, filename="camt.053-test.xml", exchange_type=None):
         record = self.backend.create_record(
-            self.exchange_type.code,
+            (exchange_type or self.exchange_type).code,
             {
                 "exchange_file": file_content,
                 "exchange_filename": filename,
@@ -91,6 +95,7 @@ class TestBankStatementImportHandler(AccountTestInvoicingCommon):
         self.assertEqual(statement.line_ids.amount, -1200.0)
         # In 18 the lines are posted at once: no more "auto post" option.
         self.assertEqual(statement.line_ids.move_id.state, "posted")
+        self.assertEqual(statement.attachment_ids.name, "camt.053-test.xml")
 
     def test_process_file_without_transaction(self):
         """A day without transaction gives no statement: an error, like v14."""
@@ -114,7 +119,19 @@ class TestBankStatementImportHandler(AccountTestInvoicingCommon):
             )
         )
 
-    def test_set_handler_on_camt_types_only(self):
+    def test_process_unsupported_file_fails_once(self):
+        """A pain.002 file ends in error once, like v14, and the job does not fail."""
+        pain002 = self._create_type("test_pain002_in", r"^pain\.002-EPO_.*\.xml")
+        pain002.process_model_id = self.unsupported_handler
+        record = self._process(
+            base64.b64encode(b"<Document>pain.002</Document>"),
+            filename="pain.002-EPO_test.xml",
+            exchange_type=pain002,
+        )
+        self.assertEqual(record.edi_exchange_state, "input_processed_error")
+        self.assertIn("not a bank statement", record.exchange_error)
+
+    def test_set_handlers(self):
         component_handler = self.env.ref(
             "edi_component_oca.model_edi_oca_component_handler",
             raise_if_not_found=False,
@@ -125,20 +142,38 @@ class TestBankStatementImportHandler(AccountTestInvoicingCommon):
         other_handler = self.env["ir.model"]._get("edi.exchange.type")
         camt_other = self._create_type("test_camt_other", r"^camt\.053-other.*")
         camt_other.process_model_id = other_handler
+        camt_settings = self._create_type("test_camt_settings", r"^camt\.053-set.*")
+        camt_settings.advanced_settings_edit = (
+            "components:\n  process:\n    usage: input.process.custom\n"
+        )
         if component_handler:
             pain002.process_model_id = component_handler
+            camt_settings.process_model_id = component_handler
             camt_component = self._create_type("test_camt_comp", r"^camt\.054-X.*")
             camt_component.process_model_id = component_handler
 
         set_statement_process_handler(self.env)
 
         self.assertEqual(camt_empty.process_model_id, self.handler)
-        self.assertEqual(
-            pain002.process_model_id, component_handler or self.env["ir.model"]
-        )
+        self.assertEqual(pain002.process_model_id, self.unsupported_handler)
         self.assertEqual(camt_other.process_model_id, other_handler)
+        self.assertEqual(
+            camt_settings.process_model_id, component_handler or self.env["ir.model"]
+        )
         if component_handler:
             self.assertEqual(camt_component.process_model_id, self.handler)
+
+    def test_migration_script(self):
+        migration = load_script(
+            "account_statement_import_sftp/migrations/18.0.1.0.0/post-migration.py",
+            "account_statement_import_sftp_post_migration",
+        )
+        exchange_type = self._create_type("test_camt_migrated", r"^camt\.053-m.*")
+        migration.migrate(self.env.cr, None)
+        self.assertFalse(exchange_type.process_model_id)
+        migration.migrate(self.env.cr, "14.0.1.0.0")
+        exchange_type.invalidate_recordset()
+        self.assertEqual(exchange_type.process_model_id, self.handler)
 
     def test_pre_init_hook_gives_xmlid_back(self):
         """Like a database where the module was uninstalled: the xmlid is gone."""
@@ -152,5 +187,17 @@ class TestBankStatementImportHandler(AccountTestInvoicingCommon):
         pre_init_hook(self.env)
         self.assertEqual(
             self.env.ref("account_statement_import_sftp.sftp_bank_edi"),
+            self.backend_type,
+        )
+        # Loading the data file again finds the same record, no second one.
+        convert_file(
+            self.env,
+            "account_statement_import_sftp",
+            "data/edi_data.xml",
+            None,
+            mode="init",
+        )
+        self.assertEqual(
+            self.env["edi.backend.type"].search([("code", "=", "bk_sftp_imp")]),
             self.backend_type,
         )

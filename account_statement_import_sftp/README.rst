@@ -54,6 +54,10 @@ import them as bank statements. A file that cannot be imported (unknown
 format, or only transactions already imported) gets the error on its
 exchange record.
 
+Files of other input types of this backend type (like pain.002) are not
+bank statements: with the *EDI handler: bank file not imported*
+processor, their exchange record ends in error once.
+
 The statement lines are posted when they are created, so the old
 ``import_statement_edi_auto_post`` system parameter is not used any
 more.
@@ -66,6 +70,9 @@ Changelog
 
 - [MIG] Migration to 18.0: the component is now an EDI process handler
   model. The migration sets it on the camt input exchange types.
+- [ADD] Other input types of the backend type (like pain.002) get a
+  handler that ends the exchange record in error once: they are not bank
+  statements.
 - [REM] ``import_statement_edi_auto_post``: in 18 the statement lines
   are always posted.
 

@@ -48,20 +48,25 @@ def post_init_hook(env):
 
 
 def set_statement_process_handler(env):
-    """Use the bank statement handler to process the camt input files.
+    """Give a process handler to the input exchange types of the backend type.
 
-    In v14 a component processed all input files of the backend type. In 18
-    the exchange type gives the process handler. edi_oca puts its component
-    handler where it is empty, but no component is left to call.
+    In v14 one component processed all input files of the backend type. In
+    18 the exchange type gives the process handler. edi_oca puts its
+    component handler where it is empty, but no component is left to call,
+    and its error is not caught: the job would fail again every hour.
 
-    Only camt files (the filename pattern has "camt"): other files, like the
-    pain.002 ones, were never bank statements and always failed. Another
-    handler can be on purpose, so we keep it and only report it.
+    - camt files (the filename pattern has "camt"): import bank statements.
+    - Other files, like pain.002: they were never bank statements. Like in
+      v14, they end once in error, with a clear message.
+
+    Another handler, or process settings on the type, can be on purpose: we
+    keep them and only report them.
     """
     backend_type = env.ref(BACKEND_TYPE_XMLID, raise_if_not_found=False)
     if not backend_type:
         return
-    handler = env["ir.model"]._get("edi.bank.statement.import.handler")
+    statement_handler = env["ir.model"]._get("edi.bank.statement.import.handler")
+    unsupported_handler = env["ir.model"]._get("edi.bank.file.unsupported.handler")
     component_handler = env.ref(
         "edi_component_oca.model_edi_oca_component_handler", raise_if_not_found=False
     )
@@ -79,22 +84,36 @@ def set_statement_process_handler(env):
     camt_types = exchange_types.filtered(
         lambda t: "camt" in (t.exchange_filename_pattern or "").lower()
     )
-    to_set = camt_types.filtered(
-        lambda t: not t.process_model_id or t.process_model_id == component_handler
-    )
-    if to_set:
-        to_set.write({"process_model_id": handler.id})
-    other = camt_types.filtered(lambda t: t.process_model_id != handler)
-    _logger.info(
-        "Bank statement import over EDI: %s camt input types, handler set on %s, "
-        "other input types not changed: %s",
-        len(camt_types),
-        to_set.ids,
-        (exchange_types - camt_types).ids,
-    )
-    if other:
-        _logger.warning(
-            "Bank statement import over EDI: camt input types %s have another "
-            "process handler, please check them",
-            other.ids,
+    for types, handler in (
+        (camt_types, statement_handler),
+        (exchange_types - camt_types, unsupported_handler),
+    ):
+        to_set = types.filtered(
+            lambda t: (
+                not t.process_model_id or t.process_model_id == component_handler
+            )
+            and not _has_process_settings(t)
         )
+        if to_set:
+            to_set.write({"process_model_id": handler.id})
+        other = types.filtered(lambda t, h=handler: t.process_model_id != h)
+        _logger.info(
+            "Bank statement import over EDI: %s set on input types %s",
+            handler.model,
+            to_set.ids,
+        )
+        if other:
+            _logger.warning(
+                "Bank statement import over EDI: input types %s keep their "
+                "process handler or settings, please check them",
+                other.ids,
+            )
+
+
+def _has_process_settings(exchange_type):
+    """The component handler reads them, our handlers do not."""
+    settings = exchange_type.get_settings() or {}
+    return bool(
+        settings.get("components", {}).get("process")
+        or settings.get("execution_model", {}).get("process")
+    )
