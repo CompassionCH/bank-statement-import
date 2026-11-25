@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!-- Anonymized Swedish bank camt.054: the account is a BBAN in Acct/Id/Othr/Id
+     and NtryRef is the bank's entry reference, not an account. -->
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.054.001.02">
+<BkToCstmrDbtCdtNtfctn>
+<GrpHdr>
+<MsgId>TESTSESSCRED000000000000000001</MsgId>
+<CreDtTm>2026-11-24T20:01:04.846720</CreDtTm>
+<AddtlInf>CRED</AddtlInf>
+</GrpHdr>
+<Ntfctn>
+<Id>TESTSESSCRED00000000000000000100001</Id>
+<CreDtTm>2026-11-24T20:01:04.846720</CreDtTm>
+<Acct>
+<Id>
+<Othr>
+<Id>000000000000001</Id>
+<SchmeNm>
+<Cd>BBAN</Cd>
+</SchmeNm>
+</Othr>
+</Id>
+<Ccy>SEK</Ccy>
+</Acct>
+<TxsSummry>
+<TtlNtries>
+<NbOfNtries>1</NbOfNtries>
+<Sum>355.75000</Sum>
+</TtlNtries>
+</TxsSummry>
+<Ntry>
+<NtryRef>1000000000000001</NtryRef>
+<Amt Ccy="SEK">355.750</Amt>
+<CdtDbtInd>CRDT</CdtDbtInd>
+<Sts>BOOK</Sts>
+<BookgDt>
+<Dt>2026-11-24</Dt>
+</BookgDt>
+<ValDt>
+<Dt>2026-11-24</Dt>
+</ValDt>
+<BkTxCd>
+<Domn>
+<Cd>PMNT</Cd>
+<Fmly>
+<Cd>NTAV</Cd>
+<SubFmlyCd>NTAV</SubFmlyCd>
+</Fmly>
+</Domn>
+</BkTxCd>
+<NtryDtls>
+<TxDtls>
+<Refs>
+<EndToEndId>NOTPROVIDED</EndToEndId>
+</Refs>
+<AmtDtls>
+<InstdAmt>
+<Amt Ccy="EUR">32.000</Amt>
+</InstdAmt>
+<TxAmt>
+<Amt Ccy="SEK">355.750</Amt>
+<CcyXchg>
+<SrcCcy>EUR</SrcCcy>
+<TrgtCcy>SEK</TrgtCcy>
+<UnitCcy>SEK</UnitCcy>
+<XchgRate>11.1173</XchgRate>
+</CcyXchg>
+</TxAmt>
+</AmtDtls>
+<RltdPties>
+<Dbtr>
+<Nm>Test Debtor</Nm>
+</Dbtr>
+<Cdtr>
+<Nm>Test Creditor</Nm>
+</Cdtr>
+</RltdPties>
+<RmtInf>
+<Ustrd>Test remittance</Ustrd>
+</RmtInf>
+</TxDtls>
+</NtryDtls>
+</Ntry>
+</Ntfctn>
+</BkToCstmrDbtCdtNtfctn>
+</Document>

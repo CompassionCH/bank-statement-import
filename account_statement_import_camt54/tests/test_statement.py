@@ -140,6 +140,46 @@ class TestGenerateBankStatement(TransactionCase):
         )
         self.assertAlmostEqual(sum(statement.line_ids.mapped("amount")), 184.0)
 
+    def test_statement_import_camt054_ntryref_not_iban(self):
+        """When NtryRef is a bank entry reference rather than an IBAN (as in
+        Swedish camt.054 files), the journal is matched on Acct/Id."""
+        sek_currency = self.env.ref("base.SEK")
+        sek_currency.write({"active": True})
+        bban_bank = self.env["res.partner.bank"].create(
+            {
+                "acc_number": "000000000000001",
+                "partner_id": self.env.ref("base.main_partner").id,
+                "company_id": self.env.ref("base.main_company").id,
+            }
+        )
+        bban_journal = self.env["account.journal"].create(
+            {
+                "name": "Test BBAN journal (camt054)",
+                "code": "TBB54",
+                "type": "bank",
+                "bank_account_id": bban_bank.id,
+                "currency_id": sek_currency.id,
+            }
+        )
+        testfile = file_path(
+            "account_statement_import_camt54/tests/samples/"
+            "test-camt054-ntryref-not-iban.xml"
+        )
+        with open(testfile, "rb") as datafile:
+            action = (
+                self.env["account.statement.import"]
+                .create(
+                    {
+                        "statement_filename": "test-camt054-ntryref-not-iban.xml",
+                        "statement_file": base64.b64encode(datafile.read()),
+                    }
+                )
+                .import_file_button()
+            )
+        statement = self.env["account.bank.statement"].browse(action["domain"][0][2])
+        self.assertEqual(statement.journal_id, bban_journal)
+        self.assertAlmostEqual(sum(statement.line_ids.mapped("amount")), 355.75)
+
     def test_statement_import_camt054_qrr_fields(self):
         """The QRR goes in the reference, the additional remittance
         information in the label and the note; without additional
