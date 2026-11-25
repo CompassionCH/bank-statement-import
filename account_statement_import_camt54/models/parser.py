@@ -6,6 +6,8 @@ import re
 from odoo import models
 from odoo.exceptions import UserError
 
+IBAN_FORMAT = re.compile(r"^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$")
+
 
 class CamtParser(models.AbstractModel):
     """Parser for camt bank statement import files."""
@@ -110,21 +112,19 @@ class CamtParser(models.AbstractModel):
     def parse_statement(self, ns, node):
         """In case of a camt.054 file, the QR-IBAN to be used as the
         account_number is found in the entry's own reference rather than
-        the account-level IBAN."""
+        the account-level IBAN. Some banks (e.g. Swedbank) use NtryRef for
+        their own entry reference instead: it is only taken as the account
+        when it looks like an IBAN."""
         result = super().parse_statement(ns, node)
         re_camt_version = re.compile(
             r"(^urn:iso:std:iso:20022:tech:xsd:camt.054." r"|^ISO:camt.054.)"
         )
         if re_camt_version.search(ns):
-            self.add_value_from_node(
-                ns,
-                node,
-                [
-                    "./ns:Ntry[1]/ns:NtryRef",
-                    "./ns:Acct/ns:Id/ns:IBAN",
-                    "./ns:Acct/ns:Id/ns:Othr/ns:Id",
-                ],
-                result,
-                "account_number",
-            )
+            xpaths = ["./ns:Acct/ns:Id/ns:IBAN", "./ns:Acct/ns:Id/ns:Othr/ns:Id"]
+            entry_ref = node.xpath("./ns:Ntry[1]/ns:NtryRef", namespaces={"ns": ns})
+            if entry_ref and IBAN_FORMAT.match(
+                (entry_ref[0].text or "").replace(" ", "")
+            ):
+                xpaths.insert(0, "./ns:Ntry[1]/ns:NtryRef")
+            self.add_value_from_node(ns, node, xpaths, result, "account_number")
         return result
