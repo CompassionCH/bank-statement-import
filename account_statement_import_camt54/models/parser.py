@@ -6,6 +6,8 @@ import re
 from odoo import models
 from odoo.exceptions import UserError
 
+from odoo.addons.base.models.res_bank import sanitize_account_number
+
 IBAN_FORMAT = re.compile(r"^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$")
 
 
@@ -109,12 +111,33 @@ class CamtParser(models.AbstractModel):
         )
         return True
 
+    def _is_account_number(self, entry_ref):
+        account_number = sanitize_account_number(entry_ref)
+        if not account_number:
+            return False
+        return bool(
+            IBAN_FORMAT.match(account_number)
+            or self.env["account.journal"].search_count(
+                [
+                    ("type", "=", "bank"),
+                    (
+                        "bank_account_id.sanitized_acc_number",
+                        "=",
+                        account_number,
+                    ),
+                ],
+                limit=1,
+            )
+        )
+
     def parse_statement(self, ns, node):
         """In case of a camt.054 file, the QR-IBAN to be used as the
         account_number is found in the entry's own reference rather than
-        the account-level IBAN. Some banks (e.g. Swedbank) use NtryRef for
-        their own entry reference instead: it is only taken as the account
-        when it looks like an IBAN."""
+        the account-level IBAN. CH-DD notifications put the creditor ID
+        there, which a journal holds as its account number. Some banks
+        (e.g. Swedbank) use NtryRef for their own entry reference instead:
+        it is only taken as the account when it looks like an IBAN or is
+        the account number of a journal."""
         result = super().parse_statement(ns, node)
         re_camt_version = re.compile(
             r"(^urn:iso:std:iso:20022:tech:xsd:camt.054." r"|^ISO:camt.054.)"
@@ -122,9 +145,7 @@ class CamtParser(models.AbstractModel):
         if re_camt_version.search(ns):
             xpaths = ["./ns:Acct/ns:Id/ns:IBAN", "./ns:Acct/ns:Id/ns:Othr/ns:Id"]
             entry_ref = node.xpath("./ns:Ntry[1]/ns:NtryRef", namespaces={"ns": ns})
-            if entry_ref and IBAN_FORMAT.match(
-                (entry_ref[0].text or "").replace(" ", "")
-            ):
+            if entry_ref and self._is_account_number(entry_ref[0].text):
                 xpaths.insert(0, "./ns:Ntry[1]/ns:NtryRef")
             self.add_value_from_node(ns, node, xpaths, result, "account_number")
         return result

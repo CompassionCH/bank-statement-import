@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Anonymized PostFinance CH-DD camt.054: NtryRef is the creditor ID,
+     not an IBAN; Acct/IBAN is the regular postal account. -->
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.054.001.08">
+<BkToCstmrDbtCdtNtfctn>
+<GrpHdr>
+<MsgId>20261125000000000000001</MsgId>
+<CreDtTm>2026-11-25T23:34:39</CreDtTm>
+</GrpHdr>
+<Ntfctn>
+<Id>20261125000000000000002</Id>
+<CreDtTm>2026-11-25T23:34:39</CreDtTm>
+<Acct>
+<Id>
+<IBAN>CH0000000000000000001</IBAN>
+</Id>
+<Ccy>CHF</Ccy>
+</Acct>
+<Ntry>
+<NtryRef>41100000000000001</NtryRef>
+<Amt Ccy="CHF">150.00</Amt>
+<CdtDbtInd>CRDT</CdtDbtInd>
+<Sts><Cd>BOOK</Cd></Sts>
+<BookgDt><Dt>2026-11-25</Dt></BookgDt>
+<ValDt><Dt>2026-11-25</Dt></ValDt>
+<AcctSvcrRef>0000000000000001</AcctSvcrRef>
+<BkTxCd><Domn><Cd>PMNT</Cd><Fmly><Cd>IDDT</Cd><SubFmlyCd>PMDD</SubFmlyCd></Fmly></Domn></BkTxCd>
+<NtryDtls>
+<TxDtls>
+<Refs><AcctSvcrRef>000-000000001-1</AcctSvcrRef><EndToEndId>1000001</EndToEndId></Refs>
+<Amt Ccy="CHF">100.00</Amt>
+<CdtDbtInd>CRDT</CdtDbtInd>
+<RltdPties><Dbtr><Pty><Nm>Test Debtor One</Nm></Pty></Dbtr></RltdPties>
+<RmtInf><Ustrd>000000000000000000000000011</Ustrd></RmtInf>
+</TxDtls>
+<TxDtls>
+<Refs><AcctSvcrRef>000-000000001-2</AcctSvcrRef><EndToEndId>1000002</EndToEndId></Refs>
+<Amt Ccy="CHF">50.00</Amt>
+<CdtDbtInd>CRDT</CdtDbtInd>
+<RltdPties><Dbtr><Pty><Nm>Test Debtor Two</Nm></Pty></Dbtr></RltdPties>
+<RmtInf><Ustrd>000000000000000000000000022</Ustrd></RmtInf>
+</TxDtls>
+</NtryDtls>
+</Ntry>
+</Ntfctn>
+</BkToCstmrDbtCdtNtfctn>
+</Document>
