@@ -180,6 +180,51 @@ class TestGenerateBankStatement(TransactionCase):
         self.assertEqual(statement.journal_id, bban_journal)
         self.assertAlmostEqual(sum(statement.line_ids.mapped("amount")), 355.75)
 
+    def test_statement_import_camt054_chdd_creditor_id(self):
+        """A CH-DD notification carries the creditor ID in NtryRef, not an
+        IBAN: it must still go to the journal holding that creditor ID, not
+        to the journal of the postal account in Acct/IBAN."""
+        chf_currency = self.env.ref("base.CHF")
+        chf_currency.write({"active": True})
+        journals = self.env["account.journal"]
+        for code, acc_number in (
+            ("TPF54", "CH0000000000000000001"),
+            ("TDD54", "41100000000000001"),
+        ):
+            bank = self.env["res.partner.bank"].create(
+                {
+                    "acc_number": acc_number,
+                    "partner_id": self.env.ref("base.main_partner").id,
+                    "company_id": self.env.ref("base.main_company").id,
+                }
+            )
+            journals |= self.env["account.journal"].create(
+                {
+                    "name": f"Test {code} journal",
+                    "code": code,
+                    "type": "bank",
+                    "bank_account_id": bank.id,
+                    "currency_id": chf_currency.id,
+                }
+            )
+        testfile = file_path(
+            "account_statement_import_camt54/tests/samples/test-camt054-chdd.xml"
+        )
+        with open(testfile, "rb") as datafile:
+            action = (
+                self.env["account.statement.import"]
+                .create(
+                    {
+                        "statement_filename": "test-camt054-chdd.xml",
+                        "statement_file": base64.b64encode(datafile.read()),
+                    }
+                )
+                .import_file_button()
+            )
+        statement = self.env["account.bank.statement"].browse(action["domain"][0][2])
+        self.assertEqual(statement.journal_id, journals[1])
+        self.assertAlmostEqual(sum(statement.line_ids.mapped("amount")), 150.0)
+
     def test_statement_import_camt054_qrr_fields(self):
         """The QRR goes in the reference, the additional remittance
         information in the label and the note; without additional
